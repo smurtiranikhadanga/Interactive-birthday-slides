@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Birthday Surprise ✨</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css?v=17">
+</head>
+<body class="theme-default">
+  
+  <!-- Floating particles canvas for interactive themes (rendered globally in background) -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- ================= CREATOR MODE ================= -->
+  <div id="creator-view" class="view-container">
+    <div class="creator-card">
+      <header class="creator-header">
+        <h1><i class="fa-solid fa-wand-magic-sparkles animate-sparkle"></i> Surprise Slide Creator</h1>
+        <p>Design a magical, interactive birthday surprise deck. Fill in the details below, copy the link/QR code, and share it with your special someone!</p>
+      </header>
+
+      <!-- Steps Progress Bar -->
+      <div class="steps-nav">
+        <button class="step-btn active" data-step="1">1. Theme & Music</button>
+        <button class="step-btn" data-step="2">2. Lock & Curtains</button>
+        <button class="step-btn" data-step="3">3. Cake & Timer</button>
+        <button class="step-btn" data-step="4">4. Memories Stack</button>
+        <button class="step-btn" data-step="5">5. Balloon Pop</button>
+        <button class="step-btn" data-step="6">6. Puzzle & Scratch</button>
+        <button class="step-btn" data-step="7">7. Letter & Share</button>
+      </div>
+
+      <!-- Form Container -->
+      <form id="creator-form" onsubmit="return false;">
+        
+        <!-- STEP 1: Theme & Music -->
+        <div class="form-step active" id="step-1">
+          <h2><i class="fa-solid fa-palette"></i> Theme & Soundtrack</h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Choose a Design Theme</label>
+              <div class="option-picker" id="theme-picker">
+                <!-- Javascript will inject options -->
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Choose Background Particles</label>
+              <div class="option-picker" id="bg-picker">
+                <!-- Javascript will inject options -->
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Gift Box Style</label>
+              <div class="option-picker" id="gift-picker">
+                <!-- Javascript will inject options -->
+              </div>
+              <div id="creator-gift-preview" style="margin-top: 12px; display: flex; justify-content: center; align-items: center; height: 130px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); border-radius: 12px; position: relative; overflow: hidden;">
+                <!-- Live preview of gift box -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="gift-message">Heart Message inside Gift Box</label>
+              <input type="text" id="gift-message" required placeholder="e.g. You are the best thing that ever happened to me!">
+            </div>
+
+            <div class="form-group">
+              <label for="gift-submessage">Submessage (under the heart)</label>
+              <input type="text" id="gift-submessage" required placeholder="e.g. Tap again to see what else I planned...">
+            </div>
+
+            <div class="form-group full-width">
+              <label><i class="fa-solid fa-music"></i> Soundtrack Loop</label>
+              <p class="field-desc">This music will play continuously. Select a sweet preset loop, upload a file, or paste an MP3 URL.</p>
+              <div class="option-picker" id="music-picker">
+                <!-- JS will inject preset tracks -->
+              </div>
+              <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                  <label for="music-file-input" style="font-size: 0.85em; font-weight: normal;">Upload Audio File (from Device/Drive):</label>
+                  <input type="file" id="music-file-input" accept="audio/*" style="width: 100%; padding: 8px;">
+                </div>
+                <div>
+                  <label for="music-custom-url" style="font-size: 0.85em; font-weight: normal;">Or Custom MP3 URL:</label>
+                  <input type="url" id="music-custom-url" placeholder="https://example.com/song.mp3" style="width: 100%;">
+                </div>
+              </div>
+              <div id="music-upload-status" style="display: none; font-size: 0.85rem; color: #00e676; font-weight: bold; margin-top: 12px; background: rgba(0, 230, 118, 0.08); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(0, 230, 118, 0.2); animation: fadeIn 0.3s ease;">
+                <!-- Status text injected by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Security & Curtains -->
+        <div class="form-step" id="step-2">
+          <h2><i class="fa-solid fa-lock"></i> Lock Page & Curtains loading</h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="lock-code">Secret Lock Passcode</label>
+              <input type="text" id="lock-code" required placeholder="e.g. 1111" maxlength="6">
+              <span class="field-desc">A numeric code (max 6 digits) to open the lock.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="lock-hint">Passcode Hint</label>
+              <input type="text" id="lock-hint" required placeholder="e.g. The time we always make a wish...">
+            </div>
+
+            <div class="form-group full-width">
+              <label for="curtain-message-1">Curtains Closed Message</label>
+              <input type="text" id="curtain-message-1" required placeholder="Open the envelope of surprises">
+            </div>
+
+            <div class="form-group full-width">
+              <label>Async Loading Messages</label>
+              <p class="field-desc">These messages will pop up one by one while opening the curtains to simulate loading something special.</p>
+              <div class="dynamic-list" id="loading-msgs-container">
+                <!-- Javascript will inject list -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="curtains-title">Curtains Revealed Title</label>
+              <input type="text" id="curtains-title" required placeholder="Here we go, beautiful!">
+            </div>
+
+            <div class="form-group">
+              <label for="curtains-subtitle">Curtains Revealed Subtitle</label>
+              <input type="text" id="curtains-subtitle" required placeholder="I built this little experience just for you. Ready?">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Birthday Greeting & Cake -->
+        <div class="form-step" id="step-3">
+          <h2><i class="fa-solid fa-cake-candles"></i> Greeting & Interactive Cake</h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="recipient-name">Recipient's Name</label>
+              <input type="text" id="recipient-name" required placeholder="e.g. Name">
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-dob">Date & Time of Birth (for timer)</label>
+              <input type="datetime-local" id="recipient-dob" required>
+              <span class="field-desc">Used to calculate Years, Days, Hours, Mins since birth.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="recipient-age">Age (for candles)</label>
+              <input type="number" id="recipient-age" required min="1" max="120" placeholder="e.g. 21">
+            </div>
+
+            <div class="form-group">
+              <label for="cake-greeting">Greeting Text</label>
+              <input type="text" id="cake-greeting" required placeholder="May all your dreams turn into reality.">
+            </div>
+            
+            <div class="form-group full-width" style="margin-top: 15px;">
+              <label><i class="fa-solid fa-cake-candles"></i> Choose Cake Design & Flavor</label>
+              <p class="field-desc">This is the interactive cake the recipient will blow candles on.</p>
+              <div class="option-picker" id="cake-style-picker">
+                <!-- JS will inject cake styles -->
+              </div>
+            </div>
+            
+            <div class="form-group full-width" style="margin-top: 15px;">
+              <label>Cake Live Preview</label>
+              <div id="creator-cake-preview" style="margin-top: 12px; display: flex; justify-content: center; align-items: center; height: 160px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); border-radius: 12px; position: relative; overflow: hidden; padding-top: 30px;">
+                <!-- Miniature Cake Render structure will be injected here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Cute Memories Card Stack -->
+        <div class="form-step" id="step-4">
+          <h2><i class="fa-solid fa-images"></i> Cute Candid Memories (Stacked Cards)</h2>
+          <p class="step-desc">Add cute photos from your device/drive or use URLs. Captions are handwritten at the bottom. You can add up to 8 memory cards.</p>
+          
+          <div id="photos-container" class="form-stacked-cards">
+            <!-- JS will inject photo forms dynamically -->
+          </div>
+          <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button type="button" id="add-photo-btn" class="nav-btn" style="padding: 10px 20px; background: rgba(var(--accent-rgb), 0.15); border-color: var(--accent-color);"><i class="fa-solid fa-plus"></i> Add Memory Card</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Balloon Pop Game -->
+        <div class="form-step" id="step-5">
+          <h2><i class="fa-solid fa-circle-nodes"></i> Balloon Pop Wishes</h2>
+          <p class="step-desc">Enter the messages that will show up when each balloon is popped. Add as many wishes as you want!</p>
+          
+          <div class="form-grid" id="balloons-container" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <!-- JS will inject balloon wish inputs dynamically -->
+          </div>
+          <div style="margin-top: 15px;">
+            <button type="button" id="add-wish-btn" class="nav-btn" style="padding: 10px 20px; background: rgba(var(--accent-rgb), 0.15); border-color: var(--accent-color);"><i class="fa-solid fa-plus"></i> Add Balloon Wish</button>
+          </div>
+        </div>
+
+        <!-- STEP 6: Birthday Puzzle & Scratch Card -->
+        <div class="form-step" id="step-6">
+          <h2><i class="fa-solid fa-puzzle-piece"></i> Puzzle & Scratch Card</h2>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <h3 class="section-sub-title">1. Birthday 3x3 Sliding Puzzle</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                  <label for="puzzle-file-input">Upload Puzzle Image:</label>
+                  <input type="file" id="puzzle-file-input" accept="image/*" style="width: 100%; padding: 8px;">
+                </div>
+                <div>
+                  <label for="puzzle-img-url">Or Puzzle Image URL:</label>
+                  <input type="url" id="puzzle-img-url" placeholder="https://example.com/cute-photo.jpg" style="width: 100%;">
+                </div>
+              </div>
+              <p class="field-desc">Select an image from files or enter a URL. It will be sliced into the sliding game.</p>
+            </div>
+            
+            <div class="form-group full-width">
+              <h3 class="section-sub-title" style="margin-top: 15px;">2. Golden Scratch Card</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                  <label for="scratch-file-input">Upload Underneath Image:</label>
+                  <input type="file" id="scratch-file-input" accept="image/*" style="width: 100%; padding: 8px;">
+                </div>
+                <div>
+                  <label for="scratch-img-url">Or Scratch Image URL:</label>
+                  <input type="url" id="scratch-img-url" placeholder="https://example.com/surprise-reveal-photo.jpg" style="width: 100%;">
+                </div>
+              </div>
+              <p class="field-desc">This image is hidden underneath the gold foil scratch card.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="scratch-name">Birthday Username (under foil)</label>
+              <input type="text" id="scratch-name" required placeholder="e.g. My Favorite Human">
+              <p class="field-desc">Displays "Happy Birthday {username}" after card is scratched.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 7: Love Letter & Share -->
+        <div class="form-step" id="step-7">
+          <h2><i class="fa-solid fa-envelope-open-text"></i> Letter & Generate Share Link</h2>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="letter-text">Your Special Letter</label>
+              <textarea id="letter-text" required rows="10" placeholder="Write your heartfelt letter here. This will be typed out letter-by-letter once they open the wax envelope..."></textarea>
+            </div>
+
+            <!-- GENERATION BOX -->
+            <div class="form-group full-width share-section-wrapper">
+              <button type="button" id="generate-btn" class="action-btn"><i class="fa-solid fa-share-nodes"></i> Generate Surprise Link</button>
+              
+              <div id="share-results" class="share-results hide">
+                <div class="share-info">
+                  <div class="qr-container">
+                    <h3>Scan QR Code to Open on Phone</h3>
+                    <div id="qrcode-canvas-wrapper">
+                      <canvas id="qrcode-canvas"></canvas>
+                    </div>
+                  </div>
+                  <div class="link-container">
+                    <h3>Copy Surprise Link</h3>
+                    <div class="copy-input-group">
+                      <input type="text" id="share-link-input" readonly>
+                      <button type="button" id="copy-link-btn" class="icon-btn"><i class="fa-solid fa-copy"></i> Copy</button>
+                    </div>
+                    <p class="share-hint"><i class="fa-solid fa-info-circle"></i> Tip: Send this link or QR code to the birthday person. They can open it on their phone, and all interactions (toggles, clicking, games) will work perfectly in their browser!</p>
+                  </div>
+                </div>
+                <div class="preview-action">
+                  <button type="button" id="preview-btn" class="action-btn secondary-btn"><i class="fa-solid fa-play"></i> Test / Preview Deck</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- Navigation buttons at bottom -->
+      <footer class="creator-footer">
+        <button type="button" id="prev-step-btn" class="nav-btn" disabled><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <button type="button" id="next-step-btn" class="nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </footer>
+    </div>
+  </div>
+
+
+  <!-- ================= PLAYER MODE ================= -->
+  <div id="player-view" class="view-container hide">
+    
+
+    <!-- Global Sound Toggle -->
+    <button id="music-toggle-btn" class="global-audio-btn">
+      <i class="fa-solid fa-music"></i>
+      <div class="bars">
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </button>
+
+    <!-- Slide progress dots -->
+    <div id="player-progress" class="progress-bar">
+      <!-- Dots injected dynamically -->
+    </div>
+
+    <!-- Active Slides Viewport -->
+    <div class="slides-viewport">
+
+      <!-- SLIDE 1: GIFT BOX CHOOSE -->
+      <section class="slide-section active" id="slide-gift">
+        <div class="slide-content glass-card gift-slide-card">
+          <h2 class="slide-title">Tap a Gift Box to Unravel Your Birthday Surprise ✨</h2>
+          <p class="slide-subtitle">A little world constructed with love. Choose one box to begin!</p>
+          
+          <div class="gift-options-wrapper" id="player-gift-container">
+            <!-- 4 Gift box options rendered dynamically -->
+          </div>
+
+          <div class="gift-message-reveal hide" id="gift-reveal-card">
+            <div class="heart-pulse-wrapper">
+              <i class="fa-solid fa-heart heart-blast"></i>
+            </div>
+            <p id="player-gift-msg" class="revealed-msg"></p>
+            <p id="player-gift-submsg" class="revealed-submsg"></p>
+            <button class="action-btn slide-next-btn" style="margin-top: 20px;">Open Next Surprise <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: PASSWORD LOCK -->
+      <section class="slide-section" id="slide-lock">
+        <div class="slide-content glass-card lock-slide-card">
+          <div class="clock-display animate-pulse">11:11</div>
+          <h2 class="slide-title">Birthday Surprise</h2>
+          
+          <div class="lock-wrapper">
+            <div class="lock-icon-container">
+              <i class="fa-solid fa-lock" id="padlock-icon"></i>
+            </div>
+            <p class="lock-instruction">Enter the secret code</p>
+            <p class="lock-hint" id="player-lock-hint"></p>
+          </div>
+
+          <!-- Code slots indicator -->
+          <div class="code-slots" id="code-slots">
+            <!-- Dot elements representing characters entered -->
+          </div>
+
+          <!-- Glassmorphic Keypad -->
+          <div class="numpad">
+            <button class="num-key" data-val="1">1</button>
+            <button class="num-key" data-val="2">2</button>
+            <button class="num-key" data-val="3">3</button>
+            <button class="num-key" data-val="4">4</button>
+            <button class="num-key" data-val="5">5</button>
+            <button class="num-key" data-val="6">6</button>
+            <button class="num-key" data-val="7">7</button>
+            <button class="num-key" data-val="8">8</button>
+            <button class="num-key" data-val="9">9</button>
+            <button class="num-key text-btn" data-val="clear">Clear</button>
+            <button class="num-key" data-val="0">0</button>
+            <button class="num-key icon-key" data-val="backspace"><i class="fa-solid fa-delete-left"></i></button>
+          </div>
+
+          <div class="lock-error-msg hide" id="lock-error">incorrect baby try again</div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: CURTAINS (LOADING SCREEN) -->
+      <section class="slide-section" id="slide-curtains">
+        <!-- Double velvet curtains -->
+        <div class="curtain-half curtain-left" id="curtain-left"></div>
+        <div class="curtain-half curtain-right" id="curtain-right"></div>
+        
+        <!-- Action overlay -->
+        <div class="curtains-overlay-content" id="curtain-overlay-panel">
+          <button class="open-curtain-btn" id="open-curtain-btn">
+            <span class="btn-ripple"></span>
+            <span class="btn-text" id="player-curtain-btn-text">Open Surprise</span>
+          </button>
+          <div class="async-loading-box hide" id="async-loading-box">
+            <div class="spinner"></div>
+            <p id="async-loading-text">Assembling sweet thoughts...</p>
+          </div>
+
+          <div class="curtains-revealed-text hide" id="curtains-revealed-text">
+            <h1 id="player-curtain-title"></h1>
+            <p id="player-curtain-subtitle"></p>
+            <button class="action-btn slide-next-btn">Continue <i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: COUNTDOWN & CAKE -->
+      <section class="slide-section" id="slide-countdown">
+        <div class="slide-content glass-card cake-slide-card">
+          <h2 class="slide-title cursive-font" id="player-name-greet">Happy Birthday!</h2>
+          <p id="player-cake-greeting" class="slide-subtitle"></p>
+          
+          <!-- Live Countdown Timer -->
+          <div class="countdown-container">
+            <div class="time-block">
+              <span class="time-val" id="time-years">00</span>
+              <span class="time-lbl">Years</span>
+            </div>
+            <div class="time-block">
+              <span class="time-val" id="time-days">000</span>
+              <span class="time-lbl">Days</span>
+            </div>
+            <div class="time-block">
+              <span class="time-val" id="time-hours">00</span>
+              <span class="time-lbl">Hours</span>
+            </div>
+            <div class="time-block">
+              <span class="time-val" id="time-mins">00</span>
+              <span class="time-lbl">Minutes</span>
+            </div>
+            <div class="time-block">
+              <span class="time-val font-seconds" id="time-secs">00</span>
+              <span class="time-lbl">Seconds</span>
+            </div>
+          </div>
+          <p class="timer-desc">since you came into this world ✨</p>
+
+          <!-- Interactive Cake Area -->
+          <div class="cake-interact-area">
+
+            <!-- Cake Render Structure -->
+            <div class="cake-display" id="cake-renderer">
+              <!-- Candles dynamically created -->
+              <div class="candle-positioner" id="candles-container"></div>
+              <div class="cake-layer cake-top"></div>
+              <div class="cake-layer cake-middle"></div>
+              <div class="cake-layer cake-base"></div>
+              <div class="cake-plate"></div>
+            </div>
+            <p class="cake-instruction-text" id="cake-instruct">🕯️ Tap the cake to blow out the candles!</p>
+          </div>
+
+          <div class="cake-blew-controls hide" id="cake-blew-controls">
+            <button class="action-btn slide-next-btn">Some Memories <i class="fa-solid fa-images"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: CANDID MEMORIES STACK -->
+      <section class="slide-section" id="slide-memories">
+        <div class="slide-content glass-card memories-slide-card">
+          <h2 class="slide-title">Cute Memories</h2>
+          <p class="slide-subtitle">Swipe or tap a card to flip through our beautiful moments</p>
+          
+          <div class="photo-stack-viewport">
+            <div class="photo-stack-container" id="player-photo-stack">
+              <!-- Cards dynamically loaded by JS -->
+            </div>
+          </div>
+
+          <div class="photo-stack-footer" id="photo-stack-action-btn" style="margin-top: 15px;">
+            <button class="action-btn slide-next-btn"><i class="fa-solid fa-circle-chevron-right"></i> Next Surprise</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: BALLOON POP GAME -->
+      <section class="slide-section" id="slide-balloons">
+        <!-- Floating balloons container -->
+        <div class="balloons-stage" id="balloons-stage"></div>
+
+        <div class="slide-content glass-card balloons-overlay-card">
+          <h2 class="slide-title">Pop the Wishes 🎈</h2>
+          <p class="slide-subtitle">Tap each balloon floating around to reveal a little birthday wish</p>
+          
+          <div class="pop-counter-badge">
+            Balloons Popped: <span id="popped-count">0</span> / <span id="total-balloons-count">6</span>
+          </div>
+
+          <div class="wish-reveal-toast hide" id="wish-toast">
+            <i class="fa-solid fa-star star-spin"></i>
+            <p id="wish-toast-text"></p>
+          </div>
+
+          <button class="action-btn slide-next-btn hide" id="balloons-next-btn" style="margin-top: 20px;">
+            Continue Surprise <i class="fa-solid fa-puzzle-piece"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: BIRTHDAY PUZZLE -->
+      <section class="slide-section" id="slide-puzzle">
+        <div class="slide-content glass-card puzzle-slide-card">
+          <h2 class="slide-title">Birthday Puzzle 🧩</h2>
+          <p class="slide-subtitle">Fix this 3x3 sliding puzzle of a sweet memory</p>
+          
+          <div class="puzzle-game-wrapper">
+            <!-- The 3x3 Grid Board -->
+            <div class="puzzle-board" id="puzzle-board"></div>
+
+            <!-- Puzzle Side Info / Goal -->
+            <div class="puzzle-side-controls">
+              <div class="puzzle-thumbnail-box">
+                <span class="side-lbl">Target Image:</span>
+                <img id="puzzle-goal-img" alt="Target image">
+              </div>
+              <div class="puzzle-stats">
+                <span class="puzzle-stat-label">Moves:</span>
+                <span class="puzzle-stat-val" id="puzzle-moves">0</span>
+              </div>
+              <div class="puzzle-control-buttons">
+                <button class="puzzle-btn" id="puzzle-shuffle-btn"><i class="fa-solid fa-shuffle"></i> Shuffle Again</button>
+                <button class="puzzle-btn solver-btn" id="puzzle-solve-btn"><i class="fa-solid fa-wand-magic"></i> Solve for me</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="puzzle-success-banner hide" id="puzzle-success">
+            <h3>🎉 Puzzle Completed! Spectacular!</h3>
+            <button class="action-btn slide-next-btn">One Last Surprise <i class="fa-solid fa-gift"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: SCRATCH CARD -->
+      <section class="slide-section" id="slide-scratch">
+        <div class="slide-content glass-card scratch-slide-card">
+          <h2 class="slide-title">One Last Surprise</h2>
+          <p class="slide-subtitle">Scratch the golden card to reveal what is hidden below!</p>
+          
+          <!-- Scratch Card Wrapper -->
+          <div class="scratch-card-container">
+            <div class="scratch-underlayer">
+              <img id="scratch-revealed-img" alt="Revealed photo">
+              <div class="scratch-celebration-banner hide" id="scratch-banner">
+                <h3 id="scratch-banner-greeting">Happy Birthday!</h3>
+              </div>
+            </div>
+            <!-- Canvas layered on top for scratching -->
+            <canvas id="scratch-canvas"></canvas>
+          </div>
+
+          <!-- Loading progress bar of reveal -->
+          <div class="reveal-percentage-bar">
+            <div class="reveal-fill" id="scratch-percentage-fill" style="width: 0%;"></div>
+            <span class="reveal-txt">Revealed: <span id="scratch-percentage-val">0</span>%</span>
+          </div>
+
+          <div class="scratch-action-wrapper hide" id="scratch-next-btn-container" style="margin-top: 15px;">
+            <button class="action-btn slide-next-btn">Read My Letter <i class="fa-solid fa-envelope-open-text"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: LOVE LETTER -->
+      <section class="slide-section" id="slide-letter">
+        <div class="slide-content letter-slide-card">
+          <h2 class="slide-title text-center text-white" style="margin-bottom: 20px;">A Letter for You 💌</h2>
+          
+          <!-- Envelope Container -->
+          <div class="envelope-wrapper" id="envelope-wrapper">
+            <div class="envelope" id="envelope-main">
+              <div class="envelope-front"></div>
+              <div class="envelope-back"></div>
+              <div class="envelope-flap" id="envelope-flap"></div>
+              <div class="envelope-seal" id="envelope-seal">
+                <i class="fa-solid fa-heart"></i>
+              </div>
+              <p class="click-seal-txt">Tap the heart seal to open</p>
+            </div>
+          </div>
+
+          <!-- Letter Paper Sheet -->
+          <div class="letter-sheet hide" id="letter-sheet">
+            <div class="letter-inner">
+              <div class="letter-header">
+                <span class="letter-date" id="letter-date-current">July 17, 2026</span>
+              </div>
+              <div class="letter-body cursive-font" id="letter-body-text">
+                <!-- Typewriter text injected here -->
+              </div>
+              
+              <div class="letter-footer hide" id="letter-footer" style="margin-top: 25px; text-align: right; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 15px;">
+                <p style="font-family: 'Outfit', sans-serif; font-size: 0.95rem; color: #555555; opacity: 0.85; margin: 0;">From yours and forever your,</p>
+                <p id="letter-author" class="cursive-font" style="font-size: 1.6rem; color: #ff3d00; margin: 5px 0 0 0; font-weight: bold;"></p>
+              </div>
+            </div>
+            <button class="action-btn secondary-btn hide" id="restart-deck-btn" style="margin-top: 30px; align-self: center;">
+              <i class="fa-solid fa-rotate-left"></i> Start Over
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- CDN scripts -->
+  <!-- LZString for compact URL serialization -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+  <!-- QRCode.js for generating shareable QR codes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Confetti blast library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Core Javascript Application -->
+  <script src="app.js?v=20"></script>
+</body>
+</html>
