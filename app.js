@@ -1456,6 +1456,45 @@ function generateSurpriseLink() {
     });
   });
 
+  // Handle HTML File Download (Self-Contained Portable surprise deck)
+  const downloadBtn = document.getElementById('download-html-btn');
+  if (downloadBtn) {
+    downloadBtn.onclick = () => {
+      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      
+      fetch('index.html')
+        .then(res => {
+          if (!res.ok) throw new Error("Could not fetch template file.");
+          return res.text();
+        })
+        .then(html => {
+          // Inject SURPRISE_CONFIG script
+          const configScript = `\n  <script>window.SURPRISE_CONFIG = ${JSON.stringify(config)};</script>`;
+          let processedHtml = html.replace('<head>', '<head>' + configScript);
+          
+          // Convert relative CSS and JS paths to absolute live URL paths pointing to your deployed Pages
+          processedHtml = processedHtml.replace('href="style.css', `href="${baseUrl}style.css`);
+          processedHtml = processedHtml.replace('src="app.js', `src="${baseUrl}app.js`);
+          
+          // Convert relative music paths inside config to absolute pointing to your deployed Pages
+          processedHtml = processedHtml.replaceAll('./assets/music/', `${baseUrl}assets/music/`);
+          
+          // Trigger browser file download
+          const blob = new Blob([processedHtml], { type: 'text/html' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `surprise_${config.recipientName || 'bestie'}.html`;
+          a.click();
+          
+          playSuccessSound();
+        })
+        .catch(err => {
+          console.error("HTML download compilation failed:", err);
+          alert("Failed to compile self-contained HTML file. Please use the copy link option instead!");
+        });
+    };
+  }
+
   // Preview button click
   const previewBtn = document.getElementById('preview-btn');
   previewBtn.onclick = () => {
@@ -2619,6 +2658,14 @@ function startLetterTypewriter() {
 
 // ================= CORE INITS =================
 window.addEventListener('DOMContentLoaded', () => {
+  // Check if configuration is embedded directly (Self-Contained HTML Download)
+  if (window.SURPRISE_CONFIG) {
+    CONFIG = window.SURPRISE_CONFIG;
+    isPreviewMode = false;
+    setupPlayerMode();
+    return;
+  }
+
   // Check for hash parameter first (bypasses HTTP 414 URI Too Long limits)
   let urlData = '';
   const hash = window.location.hash;
