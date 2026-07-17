@@ -1369,26 +1369,23 @@ function generateSurpriseLink() {
   const compressed = LZString.compressToEncodedURIComponent(configStr);
   const shareUrl = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
   
-  // Set UI Share fields
-  const shareLinkInput = document.getElementById('share-link-input');
-  shareLinkInput.value = shareUrl;
-  
-  // Generate initial QR Code for long URL
-  renderQrCode(shareUrl);
-  
-  // Reveal share panel
-  document.getElementById('share-results').classList.remove('hide');
-  playSuccessSound();
+  // Set UI Share fields and show loading state on generate button
+  const generateBtn = document.getElementById('generate-btn');
+  const originalBtnHtml = generateBtn.innerHTML;
+  generateBtn.disabled = true;
+  generateBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Generating Surprise...`;
 
-  // Try to shorten URL using free TinyURL API via Allorigins CORS proxy
+  const shareLinkInput = document.getElementById('share-link-input');
+  
   const statusEl = document.getElementById('shortener-status');
   if (statusEl) {
     statusEl.style.display = 'block';
-    statusEl.style.color = '#ffd700'; // yellow/gold while waiting
+    statusEl.style.color = '#ffd700'; // gold / yellow while waiting
     statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Shortening link for easy sharing...`;
   }
 
-  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(shareUrl));
+  // Use corsproxy.io (much faster and more reliable than allorigins)
+  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(shareUrl));
   
   fetch(proxyUrl)
     .then(res => {
@@ -1397,9 +1394,8 @@ function generateSurpriseLink() {
     })
     .then(shortUrl => {
       if (shortUrl && shortUrl.startsWith('https://tinyurl.com/')) {
-        // Replace value in copy box with shortened version
+        // Set shortened URL and render clean QR code
         shareLinkInput.value = shortUrl;
-        // Re-generate a much cleaner, low-density QR code for the short URL!
         renderQrCode(shortUrl);
         
         if (statusEl) {
@@ -1412,10 +1408,36 @@ function generateSurpriseLink() {
     })
     .catch(err => {
       console.warn("URL shortener failed, using full-length URL:", err);
+      shareLinkInput.value = shareUrl;
+      
       if (statusEl) {
         statusEl.style.color = '#ff9800'; // orange warn
         statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Using full-length URL (shortener offline)`;
       }
+
+      // Check original URL length before rendering QR code (prevents broken QR codes)
+      if (shareUrl.length < 2500) {
+        renderQrCode(shareUrl);
+      } else {
+        const qrWrapper = document.getElementById('qrcode-canvas-wrapper');
+        if (qrWrapper) {
+          qrWrapper.innerHTML = `
+            <div class="qr-error-msg" style="padding: 15px 10px; font-size: 0.8rem; color: #ff5252; text-align: center; border: 1px dashed rgba(255,82,82,0.3); border-radius: 8px; font-weight: 600; line-height: 1.4;">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.2rem; margin-bottom: 6px; display: block;"></i> QR Code Unavailable
+              <span style="display: block; font-weight: normal; color: var(--text-secondary); margin-top: 4px; font-size: 0.75rem;">Your custom files make the link too large for a QR code. Copy the text link instead, or use image URLs in Step 4.</span>
+            </div>
+          `;
+        }
+      }
+    })
+    .finally(() => {
+      // Re-enable button
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = originalBtnHtml;
+      
+      // Reveal share panel at the exact same time
+      document.getElementById('share-results').classList.remove('hide');
+      playSuccessSound();
     });
 
   // Copy link action button
