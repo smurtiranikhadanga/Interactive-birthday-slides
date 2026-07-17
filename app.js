@@ -1270,6 +1270,35 @@ function resumeCreatorMusicSelection() {
   }
 }
 
+// Render QR Code helper (handles canvas drawing and size fallbacks)
+function renderQrCode(url) {
+  const qrWrapper = document.getElementById('qrcode-canvas-wrapper');
+  if (!qrWrapper) return;
+  qrWrapper.innerHTML = ''; // Clear previous qr
+  
+  const qrElement = document.createElement('div');
+  qrWrapper.appendChild(qrElement);
+  
+  try {
+    new QRCode(qrElement, {
+      text: url,
+      width: 130,
+      height: 130,
+      colorDark : "#120a1f",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.M
+    });
+  } catch (err) {
+    console.error("QR Code generation failed:", err);
+    qrWrapper.innerHTML = `
+      <div class="qr-error-msg" style="padding: 15px 10px; font-size: 0.8rem; color: #ff5252; text-align: center; border: 1px dashed rgba(255,82,82,0.3); border-radius: 8px; font-weight: 600; line-height: 1.4;">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.2rem; margin-bottom: 6px; display: block;"></i> QR Code Unavailable
+        <span style="display: block; font-weight: normal; color: var(--text-secondary); margin-top: 4px; font-size: 0.75rem;">Your custom audio file is too large for a QR code. Copy the link above to share instead!</span>
+      </div>
+    `;
+  }
+}
+
 // Generate the configuration JSON, pack it, compress it into URL, and render QR code
 function generateSurpriseLink() {
   const config = {};
@@ -1338,44 +1367,56 @@ function generateSurpriseLink() {
   // Compact compression using LZString
   const configStr = JSON.stringify(config);
   const compressed = LZString.compressToEncodedURIComponent(configStr);
-  
   const shareUrl = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
   
   // Set UI Share fields
   const shareLinkInput = document.getElementById('share-link-input');
   shareLinkInput.value = shareUrl;
   
-  // Generate QR Code
-  const qrWrapper = document.getElementById('qrcode-canvas-wrapper');
-  qrWrapper.innerHTML = ''; // Clear previous qr
+  // Generate initial QR Code for long URL
+  renderQrCode(shareUrl);
   
-  // Create QR Code container element
-  const qrElement = document.createElement('div');
-  qrWrapper.appendChild(qrElement);
-  
-  // Render QR Code inside container (handles url overflow gracefully)
-  try {
-    new QRCode(qrElement, {
-      text: shareUrl,
-      width: 130,
-      height: 130,
-      colorDark : "#120a1f",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.M
-    });
-  } catch (err) {
-    console.error("QR Code generation failed due to URL length:", err);
-    qrWrapper.innerHTML = `
-      <div class="qr-error-msg" style="padding: 15px 10px; font-size: 0.8rem; color: #ff5252; text-align: center; border: 1px dashed rgba(255,82,82,0.3); border-radius: 8px; font-weight: 600; line-height: 1.4;">
-        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.2rem; margin-bottom: 6px; display: block;"></i> QR Code Unavailable
-        <span style="display: block; font-weight: normal; color: var(--text-secondary); margin-top: 4px; font-size: 0.75rem;">Your custom audio file is too large for a QR code. Copy the link above to share instead!</span>
-      </div>
-    `;
-  }
-
   // Reveal share panel
   document.getElementById('share-results').classList.remove('hide');
   playSuccessSound();
+
+  // Try to shorten URL using free TinyURL API via Allorigins CORS proxy
+  const statusEl = document.getElementById('shortener-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = '#ffd700'; // yellow/gold while waiting
+    statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Shortening link for easy sharing...`;
+  }
+
+  const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(shareUrl));
+  
+  fetch(proxyUrl)
+    .then(res => {
+      if (!res.ok) throw new Error("HTTP error during shortening");
+      return res.text();
+    })
+    .then(shortUrl => {
+      if (shortUrl && shortUrl.startsWith('https://tinyurl.com/')) {
+        // Replace value in copy box with shortened version
+        shareLinkInput.value = shortUrl;
+        // Re-generate a much cleaner, low-density QR code for the short URL!
+        renderQrCode(shortUrl);
+        
+        if (statusEl) {
+          statusEl.style.color = '#00e676'; // green on success
+          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Link successfully shortened! Easy to copy & share.`;
+        }
+      } else {
+        throw new Error("Invalid response format");
+      }
+    })
+    .catch(err => {
+      console.warn("URL shortener failed, using full-length URL:", err);
+      if (statusEl) {
+        statusEl.style.color = '#ff9800'; // orange warn
+        statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Using full-length URL (shortener offline)`;
+      }
+    });
 
   // Copy link action button
   const copyBtn = document.getElementById('copy-link-btn');
