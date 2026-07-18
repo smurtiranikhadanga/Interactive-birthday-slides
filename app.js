@@ -1384,35 +1384,97 @@ function generateSurpriseLink() {
     statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Shortening link for easy sharing...`;
   }
 
-  // Use corsproxy.io (much faster and more reliable than allorigins)
-  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(shareUrl));
-  
-  fetch(proxyUrl)
-    .then(res => {
-      if (!res.ok) throw new Error("HTTP error during shortening");
-      return res.text();
-    })
-    .then(shortUrl => {
-      if (shortUrl && shortUrl.startsWith('https://tinyurl.com/')) {
-        // Set shortened URL and render clean QR code
-        shareLinkInput.value = shortUrl;
-        renderQrCode(shortUrl);
-        
-        if (statusEl) {
-          statusEl.style.color = '#00e676'; // green on success
-          statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Link successfully shortened! Easy to copy & share.`;
-        }
+  // Helper to shorten URL
+  function shortenLink(url, onSuccess, onError) {
+    if (url.length > 5000) {
+      onError(new Error("URL too long to shorten"));
+      return;
+    }
+
+    // Try is.gd JSONP (native CORS-bypass)
+    const callbackName = 'isGdCallback_' + Math.floor(Math.random() * 1000000);
+    const script = document.createElement('script');
+    script.id = callbackName;
+    
+    let finished = false;
+    
+    window[callbackName] = function(data) {
+      if (finished) return;
+      finished = true;
+      
+      delete window[callbackName];
+      const scriptEl = document.getElementById(callbackName);
+      if (scriptEl) scriptEl.remove();
+      
+      if (data && data.shorturl) {
+        onSuccess(data.shorturl);
       } else {
-        throw new Error("Invalid response format");
+        tryTinyUrl();
       }
-    })
-    .catch(err => {
+    };
+    
+    script.onerror = function() {
+      if (finished) return;
+      finished = true;
+      
+      delete window[callbackName];
+      const scriptEl = document.getElementById(callbackName);
+      if (scriptEl) scriptEl.remove();
+      
+      tryTinyUrl();
+    };
+    
+    script.src = `https://is.gd/create.php?format=json&callback=${callbackName}&url=${encodeURIComponent(url)}`;
+    document.body.appendChild(script);
+
+    function tryTinyUrl() {
+      const tinyUrlTarget = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(url);
+      const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(tinyUrlTarget);
+      
+      fetch(proxyUrl)
+        .then(res => {
+          if (!res.ok) throw new Error("Proxy fetch failed");
+          return res.json();
+        })
+        .then(data => {
+          if (data && data.contents && data.contents.startsWith('https://tinyurl.com/')) {
+            onSuccess(data.contents.trim());
+          } else {
+            throw new Error("Invalid response from TinyURL proxy");
+          }
+        })
+        .catch(err => {
+          onError(err);
+        });
+    }
+  }
+
+  // Call the shortener
+  shortenLink(
+    shareUrl,
+    (shortUrl) => {
+      // Success
+      shareLinkInput.value = shortUrl;
+      renderQrCode(shortUrl);
+      
+      if (statusEl) {
+        statusEl.style.color = '#00e676'; // green on success
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Link successfully shortened! Easy to copy & share.`;
+      }
+      finishGeneration();
+    },
+    (err) => {
+      // Failure
       console.warn("URL shortener failed, using full-length URL:", err);
       shareLinkInput.value = shareUrl;
       
       if (statusEl) {
         statusEl.style.color = '#ff9800'; // orange warn
-        statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Using full-length URL (shortener offline)`;
+        if (shareUrl.length > 5000) {
+          statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> URL too long to shorten. Use the HTML file download instead!`;
+        } else {
+          statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Using full-length URL (shorteners offline)`;
+        }
       }
 
       // Check original URL length before rendering QR code (prevents broken QR codes)
@@ -1429,23 +1491,26 @@ function generateSurpriseLink() {
           `;
         }
       }
-    })
-    .finally(() => {
-      // Re-enable button
-      generateBtn.disabled = false;
-      generateBtn.innerHTML = originalBtnHtml;
-      
-      // Reveal share panel at the exact same time
-      document.getElementById('share-results').classList.remove('hide');
-      playSuccessSound();
-    });
+      finishGeneration();
+    }
+  );
+
+  function finishGeneration() {
+    // Re-enable button
+    generateBtn.disabled = false;
+    generateBtn.innerHTML = originalBtnHtml;
+    
+    // Reveal share panel at the exact same time
+    document.getElementById('share-results').classList.remove('hide');
+    playSuccessSound();
+  }
 
   // Copy link action button
   const copyBtn = document.getElementById('copy-link-btn');
-  copyBtn.addEventListener('click', () => {
+  copyBtn.onclick = () => {
     shareLinkInput.select();
     shareLinkInput.setSelectionRange(0, 99999); /* For mobile devices */
-    navigator.clipboard.writeText(shareUrl).then(() => {
+    navigator.clipboard.writeText(shareLinkInput.value).then(() => {
       copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
       copyBtn.style.background = '#00e676';
       setTimeout(() => {
@@ -1454,7 +1519,7 @@ function generateSurpriseLink() {
       }, 2000);
       playClickSound();
     });
-  });
+  };
 
   // Handle HTML File Download (Self-Contained Portable surprise deck)
   const downloadBtn = document.getElementById('download-html-btn');
